@@ -61,8 +61,9 @@ double measure_knn(const vector<double>& train_features,
                  int world_size,
                  int world_rank){
     double begin = MPI_Wtime();
+    int partition =  (int)test_labels.size() / world_size;
     //#pragma omp parallel for default(shared)
-    for(int i = 0; i < (int)test_labels.size(); ++i){
+    for(int i = world_rank * partition; i < world_rank * partition + partition; ++i){
         predicted_labels[i] =  knn(train_features,
                                    train_labels,
                                    train_nrow,
@@ -146,6 +147,18 @@ int main(int argc, char **argv){
                                     predicted_labels_minmax,
                                     world_size,
                                     world_rank);
+
+    // MPI_Barrier(MPI_COMM_WORLD);
+    double global_sum = 0;
+    MPI_Allreduce(&minmax_knn_time, &global_sum, 2, MPI_DOUBLE, MPI_MAX,
+           MPI_COMM_WORLD);
+  
+    cout.precision(17);
+    cout << "RANK " << world_rank << " knn time " << minmax_knn_time <<endl;
+    cout << "Total sum = " << global_sum << endl;
+
+  
+
     minmax_knn_acc = accuracy(test_labels, predicted_labels_minmax);
     
     minmax_std_time += measure_knn(train_features_std,
