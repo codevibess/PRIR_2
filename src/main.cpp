@@ -103,8 +103,9 @@ int main(int argc, char **argv){
     int world_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     
+    if(world_rank == 0) {
     cout << "Setting number of threads to " << world_size << endl;
-    
+    }
 
     
     vector<double> signals_minmax = read_csv<double>("data/train_signals.csv", 
@@ -118,7 +119,7 @@ int main(int argc, char **argv){
     minmax_normalization_time_local += measure_minmax_normalization(signals_minmax, nrow, ncol, world_size, world_rank);
     std_normalization_time_local += measure_std_normalization(signals_std, nrow, ncol, world_size, world_rank);
 
-
+    MPI_Barrier(MPI_COMM_WORLD);
     double minmax_normalization_time = 0;
     double std_normalization_time = 0;
     MPI_Allreduce(&minmax_normalization_time_local, &minmax_normalization_time, 2, MPI_DOUBLE, MPI_SUM,
@@ -161,7 +162,7 @@ int main(int argc, char **argv){
                                     world_size,
                                     world_rank);
 
-    // MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
     double minmax_knn_time = 0;
     double minmax_knn_acc = 0;
 
@@ -188,18 +189,20 @@ int main(int argc, char **argv){
     minmax_std_acc_local = accuracy(test_labels, 
                                     predicted_labels_std);
 
+    MPI_Barrier(MPI_COMM_WORLD);
     double minmax_std_time = 0;
     double minmax_std_acc = 0;
     MPI_Allreduce(&minmax_std_time_local, &minmax_std_time, 2, MPI_DOUBLE, MPI_SUM,
            MPI_COMM_WORLD);  
     MPI_Allreduce(&minmax_std_acc_local, &minmax_std_acc, 2, MPI_DOUBLE, MPI_SUM,
            MPI_COMM_WORLD);                              
-    
+    if(world_rank == 0){
     cout << "Minmax normalization time, Std normalization time, Minmax knn time, Minmax std time, Minmax accuracy, Std accuracy" << endl;
     cout << minmax_normalization_time << ", " << std_normalization_time
          << ", " << minmax_knn_time << ", " << minmax_std_time
          << ", " << minmax_knn_acc
          << ", " << minmax_std_acc << endl;
+    }
     MPI_Finalize();
     return 0;
 }
