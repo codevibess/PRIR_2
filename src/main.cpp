@@ -81,7 +81,7 @@ int main(int argc, char **argv){
     const int nrow = 6497;
     double minmax_normalization_time = 0;
     double std_normalization_time = 0;
-    double minmax_knn_time = 0;
+    double minmax_knn_time_local = 0;
     double minmax_std_time = 0;
     double minmax_knn_acc;
     double minmax_std_acc;
@@ -138,7 +138,7 @@ int main(int argc, char **argv){
     vector<int> predicted_labels_minmax(test_labels.size());
     vector<int> predicted_labels_std(test_labels.size());
     
-    minmax_knn_time += measure_knn(train_features_minmax,
+    minmax_knn_time_local += measure_knn(train_features_minmax,
                                     train_labels,
                                     train_nrow,
                                     ncol,
@@ -149,13 +149,13 @@ int main(int argc, char **argv){
                                     world_rank);
 
     // MPI_Barrier(MPI_COMM_WORLD);
-    double global_sum = 0;
-    MPI_Allreduce(&minmax_knn_time, &global_sum, 2, MPI_DOUBLE, MPI_MAX,
+    double minmax_knn_time = 0;
+    MPI_Allreduce(&minmax_knn_time_local, &minmax_knn_time, 2, MPI_DOUBLE, MPI_SUM,
            MPI_COMM_WORLD);
   
     cout.precision(17);
-    cout << "RANK " << world_rank << " knn time " << minmax_knn_time <<endl;
-    cout << "Total sum = " << global_sum << endl;
+    cout << "RANK " << world_rank << " knn time " << minmax_knn_time_local <<endl;
+    cout << "Total sum = " << minmax_knn_time << endl;
 
   
 
@@ -176,12 +176,12 @@ int main(int argc, char **argv){
     
     // minmax_normalization_time /= REPETITIONS;
     // std_normalization_time /= REPETITIONS;
-    // minmax_knn_time /= REPETITIONS;
+    // minmax_knn_time_local /= REPETITIONS;
     // minmax_std_time /= REPETITIONS;
     cout << "Average times for " << REPETITIONS << " repetitions" << endl;
     cout << "Minmax normalization time, Std normalization time, Minmax knn time, Minmax std time, Minmax accuracy, Std accuracy" << endl;
     cout << minmax_normalization_time << ", " << std_normalization_time
-         << ", " << minmax_knn_time << ", " << minmax_std_time
+         << ", " << minmax_knn_time_local << ", " << minmax_std_time
          << ", " << minmax_knn_acc
          << ", " << minmax_std_acc << endl;
     MPI_Finalize();
