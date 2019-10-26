@@ -24,14 +24,17 @@ void print_matrix(const vector<int>& matrix, int nrow, int ncol);
 void print_matrix(const vector<double>& matrix, int nrow, int ncol);
 
 const double train_ratio = 0.8;
-const double REPETITIONS = 10;
+
 
 double measure_minmax_normalization(vector<double>& signals_minmax, 
                                   const int nrow,
-                                  const int ncol){
+                                  const int ncol,
+                                  int world_size,
+                                  int world_rank){
     double begin = MPI_Wtime();
     // //#pragma omp parallel for default(shared)
-    for(int col = 0; col < ncol; col++){
+    int partition =  ncol/ world_size;
+    for(int col = world_rank * partition; col < world_rank * partition + partition; col++){
         normalize_column_minmax(signals_minmax, nrow, ncol, col);
     }
     double end = MPI_Wtime();
@@ -41,10 +44,13 @@ double measure_minmax_normalization(vector<double>& signals_minmax,
 
 double measure_std_normalization(vector<double>& signals_std, 
                                   const int nrow,
-                                  const int ncol){
+                                  const int ncol,
+                                  int world_size,
+                                  int world_rank){
     double begin = MPI_Wtime();
     //#pragma omp parallel for default(shared)
-    for(int col = 0; col < ncol; col++){
+    int partition =  ncol/ world_size;
+    for(int col = world_rank * partition; col < world_rank * partition + partition; col++){
         normalize_column_std(signals_std, nrow, ncol, col);
     }
     double end = MPI_Wtime();
@@ -79,12 +85,12 @@ double measure_knn(const vector<double>& train_features,
 int main(int argc, char **argv){
     const int ncol = 11;
     const int nrow = 6497;
-    double minmax_normalization_time = 0;
-    double std_normalization_time = 0;
+    double minmax_normalization_time_local = 0;
+    double std_normalization_time_local = 0;
     double minmax_knn_time_local = 0;
-    double minmax_std_time = 0;
-    double minmax_knn_acc;
-    double minmax_std_acc;
+    double minmax_std_time_local = 0;
+    double minmax_knn_acc_local;
+    double minmax_std_acc_local;
 
 
     MPI_Init(NULL, NULL);
@@ -96,10 +102,8 @@ int main(int argc, char **argv){
     // Get the rank of the process
     int world_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-    int num_threads = world_size;
-    if(argc > 1) num_threads = atoi(argv[1]);
-    cout << "Setting number of threads to " << num_threads << endl;
+    
+    cout << "Setting number of threads to " << world_size << endl;
     
 
     
@@ -111,8 +115,17 @@ int main(int argc, char **argv){
                                                 1);
     vector<double> signals_std = signals_minmax;
     
-    minmax_normalization_time += measure_minmax_normalization(signals_minmax, nrow, ncol);
-    std_normalization_time += measure_std_normalization(signals_std, nrow, ncol);
+    minmax_normalization_time_local += measure_minmax_normalization(signals_minmax, nrow, ncol, world_size, world_rank);
+    std_normalization_time_local += measure_std_normalization(signals_std, nrow, ncol, world_size, world_rank);
+
+
+    double minmax_normalization_time = 0;
+    double std_normalization_time = 0;
+    MPI_Allreduce(&minmax_normalization_time_local, &minmax_normalization_time, 2, MPI_DOUBLE, MPI_SUM,
+           MPI_COMM_WORLD);
+    MPI_Allreduce(&std_normalization_time_local, &std_normalization_time, 2, MPI_DOUBLE, MPI_SUM,
+           MPI_COMM_WORLD);
+    
     //Split rows
     const int train_nrow = train_ratio * nrow;
     vector<double> train_features_minmax(0);
@@ -150,18 +163,19 @@ int main(int argc, char **argv){
 
     // MPI_Barrier(MPI_COMM_WORLD);
     double minmax_knn_time = 0;
+    double minmax_knn_acc = 0;
+
+    minmax_knn_acc_local = accuracy(test_labels, predicted_labels_minmax);
     MPI_Allreduce(&minmax_knn_time_local, &minmax_knn_time, 2, MPI_DOUBLE, MPI_SUM,
            MPI_COMM_WORLD);
-  
-    cout.precision(17);
-    cout << "RANK " << world_rank << " knn time " << minmax_knn_time_local <<endl;
-    cout << "Total sum = " << minmax_knn_time << endl;
+    MPI_Allreduce(&minmax_knn_acc_local, &minmax_knn_acc, 2, MPI_DOUBLE, MPI_SUM,
+           MPI_COMM_WORLD);
 
   
 
-    minmax_knn_acc = accuracy(test_labels, predicted_labels_minmax);
     
-    minmax_std_time += measure_knn(train_features_std,
+    
+    minmax_std_time_local += measure_knn(train_features_std,
                                     train_labels,
                                     train_nrow,
                                     ncol,
@@ -170,18 +184,20 @@ int main(int argc, char **argv){
                                     predicted_labels_std,
                                     world_size,
                                     world_rank);
-    minmax_std_acc = accuracy(test_labels, predicted_labels_std);
-                                           
+
+    minmax_std_acc_local = accuracy(test_labels, 
+                                    predicted_labels_std);
+
+    double minmax_std_time = 0;
+    double minmax_std_acc = 0;
+    MPI_Allreduce(&minmax_std_time_local, &minmax_std_time, 2, MPI_DOUBLE, MPI_SUM,
+           MPI_COMM_WORLD);  
+    MPI_Allreduce(&minmax_std_acc_local, &minmax_std_acc, 2, MPI_DOUBLE, MPI_SUM,
+           MPI_COMM_WORLD);                              
     
-    
-    // minmax_normalization_time /= REPETITIONS;
-    // std_normalization_time /= REPETITIONS;
-    // minmax_knn_time_local /= REPETITIONS;
-    // minmax_std_time /= REPETITIONS;
-    cout << "Average times for " << REPETITIONS << " repetitions" << endl;
     cout << "Minmax normalization time, Std normalization time, Minmax knn time, Minmax std time, Minmax accuracy, Std accuracy" << endl;
     cout << minmax_normalization_time << ", " << std_normalization_time
-         << ", " << minmax_knn_time_local << ", " << minmax_std_time
+         << ", " << minmax_knn_time << ", " << minmax_std_time
          << ", " << minmax_knn_acc
          << ", " << minmax_std_acc << endl;
     MPI_Finalize();
