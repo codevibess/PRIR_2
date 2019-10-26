@@ -1,0 +1,326 @@
+\documentclass{scrartcl}
+\input{File_Setup.tex}
+
+\begin{document}
+%Title of the report, name of coworkers and dates (of experiment and of report).
+\begin{titlepage}
+	\centering
+	\includegraphics[width=0.3\textwidth]{logopk.jpeg}\par\vspace{1cm}
+	{\scshape\LARGE 
+	Wydział Informatyki i Telekomunikacji
+	\newline Analityka Danych
+	\par}
+	\vspace{1cm}
+	{\scshape\Large Sprawozdanie z laboratorium 1\par}
+	\vspace{1.5cm}
+	{\huge\bfseries OpenMP\par}
+	\vspace{2cm}
+	{\Large\itshape Autorzy:}\par
+	\vspace{2cm}
+	{\Large\itshape Andrii Cherevko}\par
+	\texttt{}\par
+
+	{\Large\itshape Grzegorz Bogdał}\par
+	\texttt{}\par
+	\vfill
+	Prowadzący:\par
+	mgr inż. Wojciech Książek
+
+	\vfill
+
+% Bottom of the page
+	{\large 13 października 2019\par}
+\end{titlepage}
+
+\section{Zbiór danych }
+Wybrany przez nas zbiór danych to - Wine Quality Data Set
+\url{(https://archive.ics.uci.edu/ml/datasets/Wine+Quality).}
+ Zbiór miesci w sobie dane o jakości białego i czerwonego wina.
+   Oryginalnie jest podzielony na 2 pliki : 
+\begin{itemize}
+  \item winequality-red.csv
+  \item winequality-white.csv
+\end{itemize}
+
+W pierwszym pliku z próbkami czewonego wina znajduje się: 1600 próbek.
+W drugim pliku z próbkami białego wina jest ich 4899.
+Podczas wykonania pracy nad zbiorem stworzyliśmy plik train\_signals.csv
+w którym są połączone cechy białego i czerwonego wina
+oraz plik train\_labels.csv który zawiera w sobie klasy wina. Następnie losow wymieszaliśmy wiersze.
+
+Oryginalny zbiór danych to próbki win portugalskich „Vinho Verde”.
+Pojedyncza próbka jest opisana za pomocą 11 cech oraz oceny jakości wina (quality). Ocena jakości wina jest zmienną zależną. Cechy zapisane są w postaci
+zmiennoprzecinkowej w pliku CSV.
+Cechy opisujące wino to:
+\begin{enumerate}
+\item kwasowość stała
+\item kwasowość lotna
+\item poziom zawartości kwasu cytrynowego
+\item zawartość cukru resztkowego
+\item zawartość chlorków
+\item zawartość wolnego ditlenku siarki
+\item zawartość ditlenku siarki ogółem
+\item gęstość
+\item pH
+\item poziom zawartości siarczanów
+\item poziom zawartości alkohol
+\end{enumerate}
+
+\section{Parametry komputera}
+Laboratorium zostało wykonane na komputerze o następującej konfiguracji:
+\begin{table}[h]
+    \centering
+    \begin{tabular}{llr}
+\hline
+
+\cline{1-2}
+Komponent   & Opis  \\
+\hline
+OS      & Arch Linux    \\
+
+Kompilator      & gcc    \\
+
+CPU      & AMD A10-6800K, 4 rdzenie fizyczne, brak hyperthreadingu    \\
+          
+RAM       & 16 GB 1866MHz DDR3           \\
+
+\hline
+\end{tabular}
+\end{table}
+
+\section{Metodologia}
+W języku C++ zaimplementowano normalizację MinMax, standaryzację i algorytm knn dla k=1. Program zrównoleglono używając standardu OpenMP w kompilatorze gcc. Analogiczny program napisano w języku Python przy pomocy bibliotek pandas i sklearn. Następnie zmierzono czasy w zależności od liczby rdzeni dziesięciokrotnie i uśredniono zaprezentowane poniżej wyniki.
+
+\pagebreak
+\section{Wykres czasów normalizacji}
+
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres czasów normalizacji MinMax - C++},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Czas[s]},
+xmin=0,xmax=4,
+ymin=0,ymax=0.005,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 0.000402915)
+(2, 0.0010284)
+(3, 0.00128433)
+(4, 0.00104617)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
+
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres czasów normalizacji MinMax - Python},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Czas[s]},
+xmin=0,xmax=4,
+ymin=0,ymax=0.005,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 0.002195262908935547)
+(2, 0.0021237850189208983)
+(3, 0.0020517587661743166)
+(4, 0.002150416374206543)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres czasów standaryzacji - C++},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Czas[s]},
+xmin=0,xmax=4,
+ymin=0,ymax=0.005,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 0.000284982)
+(2, 0.000928761)
+(3, 0.000921994)
+(4, 0.00103475)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres czasów standaryzacji - Python},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Czas[s]},
+xmin=0,xmax=4,
+ymin=0,ymax=0.005,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1,0.003173565864562988)
+(2,0.0031133651733398437)
+(3,0.002929377555847168)
+(4,0.003358006477355957)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres czasów KNN dla danych znormalizowanych metodą MinMax - C++},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Czas[s]},
+xmin=0,xmax=4,
+ymin=0,ymax=0.3,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 0.112567)
+(2, 0.0627832)
+(3, 0.0496401)
+(4, 0.0338465)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres czasów KNN dla danych znormalizowanych metodą MinMax - Python},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Czas[s]},
+xmin=0,xmax=4,
+ymin=0,ymax=0.3,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 0.14634275436401367)
+(2, 0.2372218608856201)
+(3, 0.19606773853302)
+(4, 0.20869193077087403)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres czasów KNN dla danych standaryzowanych - C++},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Czas[s]},
+xmin=0,xmax=4,
+ymin=0,ymax=1,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 0.896477)
+(2, 0.461227)
+(3, 0.376144)
+(4, 0.267142)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
+
+
+
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres czasów KNN dla danych standaryzowanych - Python},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Czas[s]},
+xmin=0,xmax=4,
+ymin=0,ymax=1,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 0.1461501121520996)
+(2, 0.2383200168609619)
+(3, 0.18554110527038575)
+(4, 0.20907130241394042)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
+\textbf{\textit{Uwaga:}} Wykresy bazują się na średniej z czasów dla każdej z metod z 10 powtórzeń
+
+
+
+
+
+
+
+
+
+\section{Podsumowanie}
+
+Biblioteka sklearn nie oferuje opcji zrównoleglenia normalizacji i standaryzacji. Implementacja w języku C++ staje się wolniejsza wraz z liczbą wątków. Implementacja autorów w języku C++ jest szybsza. Przypuszczalnie z uwagi na szybką implementację i mały zbiór danych narzut związany z utworzeniem wielu wątków neguje korzyści związane z równoległości, które uwidoczniłyby się na większym zbiorze.
+
+W przypadku zrównoleglenia algorytmu kNN w języku C++ można zobaczyć znaczne przyspieszenie czasów przy zwiększeniu ilości wątków. W implementacji autorów wszystkie wątki przeszukują jeden zbiór danych bez kopiowania go, przez co narzut związany z równoległością jest minimalny. Dla danych znormalizowanych metodą MinMax implementacja autorów jest szybsza od implementacji biblioteki sklearn. 
+W przypadku implementacji kNN w Python zrównoleglenie spowalnia wykonanie programu. Czas wzrasta gdy pojawia się drugi wątek, kolejne wydają się nie mieć wpływu. Autorzy sprawozdania nie rozumieją tego zachowania.
+
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+
+%------ To create Appendix with additional stuff -------%
+%\newpage
+%\appendix
+%\section{Appendix/Fylgi gögn}
+%Put data files, CAD drawings, additional sketches, etc.
+
+\end{document}
