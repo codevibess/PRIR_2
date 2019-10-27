@@ -89,7 +89,8 @@ RAM       & 16 GB 1866MHz DDR3           \\
 \end{table}
 
 \section{Metodologia}
-W języku C++ zaimplementowano normalizację MinMax, standaryzację i algorytm knn dla k=1. Program zrównoleglono używając standardu OpenMP w kompilatorze gcc. Analogiczny program napisano w języku Python przy pomocy bibliotek pandas i sklearn. Następnie zmierzono czasy w zależności od liczby rdzeni dziesięciokrotnie i uśredniono zaprezentowane poniżej wyniki.
+W języku C++ zaimplementowano normalizację MinMax, standaryzację i algorytm knn
+dla k=1. Program zrównoleglono używając MPI. Analogiczny program napisano w języku Python przy pomocy bibliotek pandas i sklearn. Następnie zmierzono czasy w zależności od liczby rdzeni dziesięciokrotnie i uśredniono zaprezentowane poniżej wyniki.
 
 \pagebreak
 \section{Wykres czasów normalizacji}
@@ -108,10 +109,10 @@ ymajorgrids=true,grid style=dashed
 
 \addplot[color=red,mark=*]
 coordinates {
-(1, 0.000402915)
-(2, 0.0010284)
-(3, 0.00128433)
-(4, 0.00104617)
+(1, 0.000217)
+(2, 0.000221)
+(3, 0.000209)
+(4, 0.000212)
 };
 
 
@@ -157,10 +158,10 @@ ymajorgrids=true,grid style=dashed
 
 \addplot[color=red,mark=*]
 coordinates {
-(1, 0.000284982)
-(2, 0.000928761)
-(3, 0.000921994)
-(4, 0.00103475)
+(1, 0.000191)
+(2, 0.000183)
+(3, 0.000164)
+(4, 0.000165)
 };
 
 
@@ -198,24 +199,46 @@ title style={text width=14em},
 xlabel={Liczba wątków},
 ylabel={Czas[s]},
 xmin=0,xmax=4,
-ymin=0,ymax=0.3,
+ymin=0,ymax=0.4,
 legend pos=north west,
 ymajorgrids=true,grid style=dashed
 ]
 
 \addplot[color=red,mark=*]
 coordinates {
-(1, 0.112567)
-(2, 0.0627832)
-(3, 0.0496401)
-(4, 0.0338465)
+(1, 0.031648)
+(2, 0.300654)
+(3, 0.300576)
+(4, 0.300111)
 };
 
 
 \end{axis}
 \end{tikzpicture}
 
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres przyspieszenia KNN dla danych znormalizowanych metodą MinMax - C++},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Przyspieszenie},
+xmin=0,xmax=4,
+ymin=0,ymax=2,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
 
+\addplot[color=red,mark=*]
+coordinates {
+(1, 1)
+(2, 0.031648/0.300654)
+(3, 0.031648/0.300576)
+(4, 0.031648/0.300111)
+};
+
+
+\end{axis}
+\end{tikzpicture}
 
 \begin{tikzpicture}[scale=1.5]
 \begin{axis}[
@@ -224,7 +247,7 @@ title style={text width=14em},
 xlabel={Liczba wątków},
 ylabel={Czas[s]},
 xmin=0,xmax=4,
-ymin=0,ymax=0.3,
+ymin=0,ymax=0.4,
 legend pos=north west,
 ymajorgrids=true,grid style=dashed
 ]
@@ -241,7 +264,29 @@ coordinates {
 \end{axis}
 \end{tikzpicture}
 
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres przyspieszenia KNN dla danych znormalizowanych metodą MinMax - Python},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Przyspieszenie},
+xmin=0,xmax=4,
+ymin=0,ymax=2,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
 
+\addplot[color=red,mark=*]
+coordinates {
+(1, 1)
+(2, 0.14634275436401367/0.2372218608856201)
+(3, 0.14634275436401367/0.19606773853302)
+(4, 0.14634275436401367/0.20869193077087403)
+};
+
+
+\end{axis}
+\end{tikzpicture}
 
 \begin{tikzpicture}[scale=1.5]
 \begin{axis}[
@@ -257,18 +302,39 @@ ymajorgrids=true,grid style=dashed
 
 \addplot[color=red,mark=*]
 coordinates {
-(1, 0.896477)
-(2, 0.461227)
-(3, 0.376144)
-(4, 0.267142)
+(1, 0.463958)
+(2, 0.412296)
+(3, 0.408675)
+(4, 0.405646)
 };
 
 
 \end{axis}
 \end{tikzpicture}
 
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres przyspieszenia KNN dla danych standaryzowanych - C++},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Przyspieszenie},
+xmin=0,xmax=4,
+ymin=0,ymax=2,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 1)
+(2, 0.463958/0.412296)
+(3, 0.463958/0.408675)
+(4, 0.463958/0.405646)
+};
 
 
+\end{axis}
+\end{tikzpicture}
 
 \begin{tikzpicture}[scale=1.5]
 \begin{axis}[
@@ -294,6 +360,30 @@ coordinates {
 \end{axis}
 \end{tikzpicture}
 
+\begin{tikzpicture}[scale=1.5]
+\begin{axis}[
+title={Wykres przyspieszenia KNN dla danych standaryzowanych - Python},
+title style={text width=14em},
+xlabel={Liczba wątków},
+ylabel={Przyspieszenie},
+xmin=0,xmax=4,
+ymin=0,ymax=2,
+legend pos=north west,
+ymajorgrids=true,grid style=dashed
+]
+
+\addplot[color=red,mark=*]
+coordinates {
+(1, 1)
+(2, 0.1461501121520996/0.2383200168609619)
+(3, 0.1461501121520996/0.18554110527038575)
+(4, 0.1461501121520996/0.20907130241394042)
+};
+
+
+\end{axis}
+\end{tikzpicture}
+
 \textbf{\textit{Uwaga:}} Wykresy bazują się na średniej z czasów dla każdej z metod z 10 powtórzeń
 
 
@@ -308,7 +398,7 @@ coordinates {
 
 Biblioteka sklearn nie oferuje opcji zrównoleglenia normalizacji i standaryzacji. Implementacja w języku C++ staje się wolniejsza wraz z liczbą wątków. Implementacja autorów w języku C++ jest szybsza. Przypuszczalnie z uwagi na szybką implementację i mały zbiór danych narzut związany z utworzeniem wielu wątków neguje korzyści związane z równoległości, które uwidoczniłyby się na większym zbiorze.
 
-W przypadku zrównoleglenia algorytmu kNN w języku C++ można zobaczyć znaczne przyspieszenie czasów przy zwiększeniu ilości wątków. W implementacji autorów wszystkie wątki przeszukują jeden zbiór danych bez kopiowania go, przez co narzut związany z równoległością jest minimalny. Dla danych znormalizowanych metodą MinMax implementacja autorów jest szybsza od implementacji biblioteki sklearn. 
+W przypadku implementacji w C++ przyspieszenie prawie nie występuje, lub równoległość wręcz spowalnia program. Prawdopodobnie dzieje się tak ponieważ zbiór danych jest mały i czas wykonania szybki, przez co narzut MPI całkowicie anuluje korzyści płynące z równoległości.
 W przypadku implementacji kNN w Python zrównoleglenie spowalnia wykonanie programu. Czas wzrasta gdy pojawia się drugi wątek, kolejne wydają się nie mieć wpływu. Autorzy sprawozdania nie rozumieją tego zachowania.
 
 
